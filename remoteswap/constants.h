@@ -23,7 +23,7 @@
 // For zion-# servers with ConnectX-3 IB, the hardware supports 32, but it can
 // only support up to 30. For the cloudlab CX5 machines, though the hardware
 // reports 30, it can only support up to 19.
-#define MAX_REQUEST_SGL 1
+#define MAX_REQUEST_SGL 19
 
 // number of write queues
 #define NR_WRITE_QUEUE 48

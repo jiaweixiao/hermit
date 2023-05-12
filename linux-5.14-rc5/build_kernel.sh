@@ -3,11 +3,11 @@
 
 ### Parameters
 
-version="5.14.0"
+version="5.14.0-rc5"
 
 # Append a suffix
-#LocalVersion="Semeru"
-LocalVersion=""
+LocalVersion="-hermit-ae"
+#LocalVersion=""
 
 num_cores=`nproc --all`
 
@@ -47,9 +47,9 @@ delete_old_kernel_contents () {
 		sudo rm /boot/initramfs-${version}${LocalVersion}.img   /boot/System.map-${version}${LocalVersion}  /boot/vmlinuz-${version}${LocalVersion}
 	elif [ $OS_DISTRO == "Ubuntu" ]
 	then
-		echo "sudo rm /boot/initrd.img-${version}*   /boot/System.map-${version}*  /boot/vmlinuz-${version}* "
+		echo "sudo rm /boot/initrd.img-${version}${LocalVersion}   /boot/System.map-${version}${LocalVersion}  /boot/vmlinuz-${version}${LocalVersion} "
 		sleep 1
-		sudo rm /boot/initrd.img-${version}*   /boot/System.map-${version}*  /boot/vmlinuz-${version}*
+		sudo rm /boot/initrd.img-${version}${LocalVersion}   /boot/System.map-${version}${LocalVersion}  /boot/vmlinuz-${version}${LocalVersion}
 	fi
 }
 
@@ -114,7 +114,7 @@ update_grub_entries () {
 		sudo update-grub
 
     echo "Warning : For Ubuntu, please edit /etc/default/grub to specify the right boot kernel verion"
-    echo "Example : GRUB_DEFAULT='Advanced options for Ubuntu>Ubuntu, with Linux 4.11.0-rc8'"
+    echo "Example : GRUB_DEFAULT='Advanced options for Ubuntu>Ubuntu, with Linux ${version}${LocalVersion}'"
 
 	fi
 }
@@ -129,7 +129,7 @@ then
 	sleep 1
 #	make oldconfig
 
-	echo "make -j${num_cores}"
+	echo "make -j${num_cores} LOCALVERSION=${LocalVersion}"
 	sleep 1
 	make -j${num_cores} LOCALVERSION=${LocalVersion}
 
