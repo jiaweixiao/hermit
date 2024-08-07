@@ -38,8 +38,8 @@
 #include "utils.h"
 
 // for the qp. Find the max number without warning.
-#define RDMA_SEND_QUEUE_DEPTH 1024
-#define RDMA_RECV_QUEUE_DEPTH 64
+#define RDMA_SEND_QUEUE_DEPTH CLIENT_SEND_QUEUE_DEPTH
+#define RDMA_RECV_QUEUE_DEPTH CLIENT_RECV_QUEUE_DEPTH
 
 #define GB_SHIFT 30
 #define CHUNK_SHIFT (u64)(GB_SHIFT + ilog2(REGION_SIZE_GB))

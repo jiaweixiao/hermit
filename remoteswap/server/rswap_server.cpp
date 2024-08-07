@@ -281,8 +281,8 @@ void build_qp_attr(struct rswap_rdma_queue *rdma_queue,
   qp_attr->recv_cq = rdma_queue->cq;
   qp_attr->qp_type = IBV_QPT_RC;
 
-  qp_attr->cap.max_send_wr = 16;
-  qp_attr->cap.max_recv_wr = 16;
+  qp_attr->cap.max_send_wr = CLIENT_RECV_QUEUE_DEPTH;
+  qp_attr->cap.max_recv_wr = CLIENT_SEND_QUEUE_DEPTH;
   qp_attr->cap.max_send_sge = MAX_REQUEST_SGL;
   qp_attr->cap.max_recv_sge = MAX_REQUEST_SGL;
 }
