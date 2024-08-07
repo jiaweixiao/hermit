@@ -469,6 +469,11 @@ int rswap_client_init(char *_server_ip, int _server_port, int _mem_size)
 	rdma_session_global.remote_mem_pool.remote_mem_size = _mem_size;
 	rdma_session_global.remote_mem_pool.chunk_num =
 		_mem_size / REGION_SIZE_GB;
+	if (_mem_size % REGION_SIZE_GB != 0) {
+		pr_err("warning: %s, mem size (%d GB) is not divisible by region size (%ld GB)\n",
+		       __func__, _mem_size, REGION_SIZE_GB);
+		rdma_session_global.remote_mem_pool.chunk_num += 1;
+	}
 
 	pr_info("%s, num_queues : %d (Can't exceed the slots on Memory server) \n",
 		__func__, num_queues);

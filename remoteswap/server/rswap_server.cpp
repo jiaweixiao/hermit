@@ -57,6 +57,13 @@ int main(int argc, char *argv[]) {
   port = atoi(argv[2]);
   mem_size_in_gb = atoi(argv[3]);
   region_num = mem_size_in_gb / REGION_SIZE_GB;
+  if (mem_size_in_gb % REGION_SIZE_GB != 0) {
+    fprintf(stderr,
+            "warning: %s, mem size (%d GB) is not divisible by region size "
+            "(%ld GB)\n",
+            __func__, mem_size_in_gb, REGION_SIZE_GB);
+    region_num += 1;
+  }
   online_cores = atoi(argv[4]);
   rdma_num_queues = online_cores * NUM_QP_TYPE;
 
