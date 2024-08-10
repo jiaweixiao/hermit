@@ -1063,6 +1063,7 @@ hermit_swap_vma_readahead(swp_entry_t fentry, gfp_t gfp_mask,
 	adc_pf_breakdown_end(pf_breakdown, ADC_DEDUP_SWAPIN, pf_ts);
 	adc_pf_breakdown_stt(pf_breakdown, ADC_PAGE_IO, pf_ts);
 
+	hermit_swap_ra_info(vmf, &pref_req.ra_info);
 	if (cpu == -1 && demand_page_allocated) {
 		cpu = get_cpu();
 		swap_readpage(fault_page, pref_req.ra_info.win == 1);
