@@ -983,11 +983,13 @@ typedef enum {
  * Calls ->writepage().
  * [Hermit] @hermit: if pageout is called by hermit datapth
  * @core: -1 for synchronous RDMA store, >=0 for asynchronous RDMA store.
+ * @writeback: set to 1 if a write-back succeed
  * For async RDMA store, we need to call frontswap_poll_store() manually later.
  */
-static pageout_t pageout_profiling(struct page *page,
-				   struct address_space *mapping, bool hermit,
-				   int core, uint64_t pf_breakdown[])
+static pageout_t __pageout_profiling(struct page *page,
+				     struct address_space *mapping, bool hermit,
+				     int core, uint64_t pf_breakdown[],
+				     int *writeback)
 {
 	pageout_t ret = PAGE_KEEP;
 	/*
@@ -1060,6 +1062,7 @@ static pageout_t pageout_profiling(struct page *page,
 			adc_profile_counter_inc(ADC_HERMIT_SWAPOUT);
 		if (res < 0)
 			handle_write_error(mapping, page, res);
+		*writeback = 1;
 		if (res == AOP_WRITEPAGE_ACTIVATE) {
 			ClearPageReclaim(page);
 			ret = PAGE_ACTIVATE;
@@ -1080,6 +1083,16 @@ static pageout_t pageout_profiling(struct page *page,
 profiling:
 	adc_pf_breakdown_end(pf_breakdown, ADC_WRITE_PAGE, pf_cycles_end());
 	return ret;
+}
+
+static inline pageout_t pageout_profiling(struct page *page,
+					  struct address_space *mapping,
+					  bool hermit, int core,
+					  uint64_t pf_breakdown[])
+{
+	int writeback = 0;
+	return __pageout_profiling(page, mapping, hermit, core, pf_breakdown,
+				   &writeback);
 }
 
 static inline pageout_t pageout(struct page *page, struct address_space *mapping)
@@ -1722,6 +1735,8 @@ batched_pageout(struct list_head *page_list, struct list_head *clean_pages,
 			goto keep_locked;
 
 		if (PageDirty(page)) {
+			int writeback = 0;
+			pageout_t pageout_result;
 			if (page_is_file_lru(page) &&
 			    (!current_is_kswapd() || !PageReclaim(page) ||
 			     !test_bit(PGDAT_DIRTY, &pgdat->flags))) {
@@ -1743,8 +1758,10 @@ batched_pageout(struct list_head *page_list, struct list_head *clean_pages,
 			if (!batch_tlb)
 				try_to_unmap_flush_dirty();
 
-			switch (pageout_profiling(page, mapping, false, core,
-						  pf_breakdown)) {
+			pageout_result =
+				__pageout_profiling(page, mapping, false, core,
+						    pf_breakdown, &writeback);
+			switch (pageout_result) {
 			case PAGE_KEEP:
 				goto keep_locked;
 			case PAGE_ACTIVATE:
@@ -1757,11 +1774,7 @@ batched_pageout(struct list_head *page_list, struct list_head *clean_pages,
 				if (PageDirty(page))
 					goto keep;
 
-				/*
-				 * A synchronous write - probably a ramdisk.  Go
-				 * ahead and try to reclaim the page.
-				 */
-				if (!trylock_page(page)) {
+				if (core != HMT_INV_CORE && writeback) {
 					VM_BUG_ON_PAGE(
 						PageLRU(page) ||
 							PageUnevictable(page),
@@ -1769,6 +1782,9 @@ batched_pageout(struct list_head *page_list, struct list_head *clean_pages,
 					list_add(&page->lru,
 						 &under_write_pages);
 					continue;
+				}
+				if (!trylock_page(page)) {
+					goto keep;
 				}
 				if (PageDirty(page) || PageWriteback(page))
 					goto keep_locked;
