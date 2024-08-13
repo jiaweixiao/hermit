@@ -279,7 +279,7 @@ int rswap_frontswap_store_on_core(unsigned type, pgoff_t swap_entry_offset,
 				  struct page *page, int core)
 {
 	int ret = 0;
-
+	core %= NR_WRITE_QUEUE;
 	ret = rswap_rdma_send(core, swap_entry_offset, page, QP_STORE);
 	if (unlikely(ret)) {
 		pr_err("%s, enqueuing rdma frontswap write failed.\n",
