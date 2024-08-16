@@ -3,11 +3,11 @@
 
 ### Parameters
 
-version="5.14.0"
+version="5.14.0-rc5"
 
 # Append a suffix
 #LocalVersion="Semeru"
-LocalVersion=""
+LocalVersion="-hermit"
 
 num_cores=`nproc --all`
 
